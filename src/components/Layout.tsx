@@ -44,6 +44,9 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                 <Link to="/reports" className="px-3 py-2 rounded-md text-sm font-medium text-gray-900 hover:bg-gray-50">
                   Reports
                 </Link>
+                <Link to="/meetings" className="px-3 py-2 rounded-md text-sm font-medium text-gray-900 hover:bg-gray-50">
+                  Meetings
+                </Link>
               </div>
             </div>
             <div className="hidden md:block">
