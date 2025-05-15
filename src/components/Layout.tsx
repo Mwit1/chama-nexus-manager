@@ -2,6 +2,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Toaster } from "@/components/ui/toaster";
+import NavbarUserMenu from '@/components/NavbarUserMenu';
+import { useAuth } from '@/contexts/AuthContext';
 import { 
   Users, 
   PiggyBank, 
@@ -12,6 +14,8 @@ import {
 } from "lucide-react";
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { user } = useAuth();
+  
   return (
     <div className="min-h-screen bg-gray-100">
       {/* Header */}
@@ -49,10 +53,14 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                 </Link>
               </div>
             </div>
-            <div className="hidden md:block">
-              <button className="ml-3 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
-                Sign in
-              </button>
+            <div className="hidden md:flex items-center">
+              {user ? (
+                <NavbarUserMenu />
+              ) : (
+                <Link to="/auth" className="ml-3 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                  Sign in
+                </Link>
+              )}
             </div>
             {/* Mobile menu button */}
             <div className="md:hidden flex items-center">
