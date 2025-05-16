@@ -37,9 +37,12 @@ const DeleteGroupDialog: React.FC<DeleteGroupDialogProps> = ({
   const handleDelete = async () => {
     try {
       setIsDeleting(true);
-      const { error } = await supabase.rpc('delete_group', {
-        p_id: group.id
-      });
+      
+      // Delete directly from the groups table instead of using RPC
+      const { error } = await supabase
+        .from('groups')
+        .delete()
+        .eq('id', group.id);
 
       if (error) throw error;
 

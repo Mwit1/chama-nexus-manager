@@ -53,8 +53,11 @@ const Groups: React.FC = () => {
     try {
       setLoading(true);
       
-      // Using a stored procedure to fetch groups data since TypeScript doesn't recognize the table
-      const { data, error } = await supabase.rpc('get_groups');
+      // Query the groups table directly
+      const { data, error } = await supabase
+        .from('groups')
+        .select('*')
+        .order('created_at', { ascending: false });
       
       if (error) throw error;
       if (!data) {

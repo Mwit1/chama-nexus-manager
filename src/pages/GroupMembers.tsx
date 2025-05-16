@@ -70,12 +70,15 @@ const GroupMembers: React.FC = () => {
     try {
       setLoading(true);
       
-      // Fetch group details using RPC
+      // Query groups table directly
       const { data: groupData, error: groupError } = await supabase
-        .rpc('get_group_by_id', { p_id: groupId });
+        .from('groups')
+        .select('*')
+        .eq('id', groupId)
+        .single();
       
       if (groupError) throw groupError;
-      if (!groupData || groupData.length === 0) {
+      if (!groupData) {
         toast({
           title: "Group not found",
           description: "The requested group does not exist.",
@@ -85,7 +88,7 @@ const GroupMembers: React.FC = () => {
         return;
       }
       
-      setGroup(groupData[0]);
+      setGroup(groupData);
       
       // Fetch group members with their profiles
       const { data: membersData, error: membersError } = await supabase
