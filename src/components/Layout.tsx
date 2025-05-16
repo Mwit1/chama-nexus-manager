@@ -10,7 +10,8 @@ import {
   Wallet, 
   CreditCard, 
   Calendar, 
-  ChartBar
+  ChartBar,
+  Group
 } from "lucide-react";
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -35,6 +36,9 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                 </Link>
                 <Link to="/members" className="px-3 py-2 rounded-md text-sm font-medium text-gray-900 hover:bg-gray-50">
                   Members
+                </Link>
+                <Link to="/groups" className="px-3 py-2 rounded-md text-sm font-medium text-gray-900 hover:bg-gray-50">
+                  Groups
                 </Link>
                 <Link to="/contributions" className="px-3 py-2 rounded-md text-sm font-medium text-gray-900 hover:bg-gray-50">
                   Contributions
