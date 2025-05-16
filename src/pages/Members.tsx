@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import { Button } from "@/components/ui/button";
@@ -11,7 +10,7 @@ import {
   TableHeader, 
   TableRow 
 } from "@/components/ui/table";
-import { UserPlus, Search, Pencil, Trash, UserX } from "lucide-react";
+import { UserPlus, Search, Pencil, Trash } from "lucide-react";
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
@@ -55,42 +54,44 @@ const Members: React.FC = () => {
     try {
       setLoading(true);
       
-      // Get the current user's role first
-      const { data: roleData, error: roleError } = await supabase
+      // Check if current user is an admin
+      const { data: isAdmin, error: roleError } = await supabase
         .rpc('has_role', { user_id: user.id, role: 'admin' });
         
       if (roleError) throw roleError;
       
-      const isAdmin = roleData;
       setUserRole(isAdmin ? 'admin' : 'member');
       
-      // Fetch user profiles (represents our members)
-      const { data, error } = await supabase
+      // Fetch all profiles and their roles
+      const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
-        .select('*, user_roles:user_roles(role)')
+        .select('*')
         .order('full_name', { ascending: true });
       
-      if (error) throw error;
+      if (profilesError) throw profilesError;
       
-      // Transform the data to match our Member type
-      const mappedMembers = data.map((profile: any): Member => {
-        let role: 'admin' | 'treasurer' | 'member' = 'member'; 
-        
-        if (profile.user_roles && profile.user_roles.length > 0) {
-          if (profile.user_roles.some((r: any) => r.role === 'admin')) {
-            role = 'admin';
-          } else if (profile.user_roles.some((r: any) => r.role === 'treasurer')) {
-            role = 'treasurer';
-          }
-        }
-        
+      // Fetch roles for each user
+      const { data: roles, error: rolesError } = await supabase
+        .from('user_roles')
+        .select('*');
+      
+      if (rolesError) throw rolesError;
+      
+      // Map roles to user IDs for quick lookup
+      const userRoles: Record<string, string> = {};
+      roles.forEach((role: any) => {
+        userRoles[role.user_id] = role.role;
+      });
+      
+      // Combine profiles with roles
+      const mappedMembers = profiles.map((profile: any): Member => {
         return {
           id: profile.id,
           full_name: profile.full_name,
           phone_number: profile.phone_number,
           email: profile.id, // Using UUID as email since we don't have it in profiles
-          role: role,
-          status: 'Active', // Default status since we don't track this yet
+          role: userRoles[profile.id] || 'member', // Default to member if no role found
+          status: 'Active', // Default status
           created_at: profile.created_at
         };
       });

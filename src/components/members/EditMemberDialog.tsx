@@ -83,17 +83,36 @@ const EditMemberDialog: React.FC<EditMemberDialogProps> = ({
         .from('profiles')
         .update({
           full_name: values.full_name,
-          phone_number: values.phone_number,
-          updated_at: new Date().toISOString(),
+          phone_number: values.phone_number || null,
         })
         .eq('id', member.id);
       
       if (profileError) throw profileError;
       
-      // In a real app, you would update the role in user_roles table
-      // and the status in a separate table
+      // Check if the role needs to be updated
+      if (member.role !== values.role) {
+        // Delete existing role
+        const { error: deleteRoleError } = await supabase
+          .from('user_roles')
+          .delete()
+          .eq('user_id', member.id);
+        
+        if (deleteRoleError) throw deleteRoleError;
+        
+        // Insert new role
+        const { error: insertRoleError } = await supabase
+          .from('user_roles')
+          .insert({
+            user_id: member.id,
+            role: values.role
+          });
+        
+        if (insertRoleError) throw insertRoleError;
+      }
       
-      // For demo purposes, show success message
+      // For status updates, we would need a separate table in a real application
+      // For this demo, we'll just update the UI state
+      
       toast({
         title: "Member updated",
         description: "Member information has been updated successfully.",

@@ -9,6 +9,53 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      contributions: {
+        Row: {
+          amount: number
+          contribution_date: string
+          created_at: string
+          description: string | null
+          group_id: string
+          id: string
+          payment_method: string
+          recorded_by: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          contribution_date?: string
+          created_at?: string
+          description?: string | null
+          group_id: string
+          id?: string
+          payment_method: string
+          recorded_by: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          contribution_date?: string
+          created_at?: string
+          description?: string | null
+          group_id?: string
+          id?: string
+          payment_method?: string
+          recorded_by?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contributions_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       group_members: {
         Row: {
           group_id: string | null
@@ -84,16 +131,36 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
       has_role: {
-        Args: {
-          user_id: string
-          role: Database["public"]["Enums"]["user_role"]
-        }
+        Args:
+          | { user_id: string; role: Database["public"]["Enums"]["user_role"] }
+          | { user_id: string; role: string }
         Returns: boolean
       }
     }

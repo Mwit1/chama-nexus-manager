@@ -38,13 +38,17 @@ const DeleteMemberDialog: React.FC<DeleteMemberDialogProps> = ({
     try {
       setIsDeleting(true);
       
-      // In a real application, you would handle deletion of a user
-      // This would typically require admin privileges and special handling
-      // For demo purposes, we'll show a message
+      // Delete from profiles (this will cascade delete from user_roles due to foreign key)
+      const { error } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', member.id);
+      
+      if (error) throw error;
       
       toast({
-        title: "Simulated member deletion",
-        description: "In a production app, this would delete the user and their profile.",
+        title: "Member deleted",
+        description: "The member has been deleted successfully.",
       });
       
       onSuccess();

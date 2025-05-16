@@ -68,39 +68,50 @@ const AddMemberDialog: React.FC<AddMemberDialogProps> = ({
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
-      // Since this is a demo, we'll simulate creating a user
-      // In a real application, you would have a secure way to create users
+      // First, check if user already exists with the provided email
+      const { data: existingUser, error: searchError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', values.email)
+        .single();
+        
+      if (searchError && searchError.code !== 'PGRST116') {
+        // PGRST116 is the error code for "no rows returned"
+        throw searchError;
+      }
       
-      // Example implementation (this won't actually work without admin privileges):
-      /*
-      // 1. Create the user in auth.users
-      const { data: authUser, error: authError } = await supabase.auth.admin.createUser({
-        email: values.email,
-        password: generateRandomPassword(),
-        email_confirm: true,
-        user_metadata: { full_name: values.full_name }
-      });
+      if (existingUser) {
+        toast({
+          title: "User already exists",
+          description: "A user with this email address already exists.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // In a real application with auth, you would first create the user in auth
+      // and then their profile would be created via trigger
       
-      if (authError) throw authError;
+      // For demo purposes, we'll create a profile directly
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .insert({
+          id: values.email, // Using email as ID for demo purposes
+          full_name: values.full_name,
+          phone_number: values.phone_number || null,
+        });
+        
+      if (profileError) throw profileError;
       
-      // 2. The profile is created automatically via trigger
-      
-      // 3. Assign the role
+      // Add user role
       const { error: roleError } = await supabase
         .from('user_roles')
         .insert({
-          user_id: authUser.id,
-          role: values.role
+          user_id: values.email, // Using email as user ID for demo
+          role: values.role,
         });
-      
+        
       if (roleError) throw roleError;
-      */
-      
-      // For demo purposes, show success message
-      toast({
-        title: "Simulated member creation",
-        description: "In a production app, this would create a new user with the specified role.",
-      });
       
       form.reset();
       onSuccess();
