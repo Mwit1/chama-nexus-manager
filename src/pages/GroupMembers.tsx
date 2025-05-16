@@ -88,8 +88,9 @@ const GroupMembers: React.FC = () => {
         return;
       }
       
-      // Cast groupData to Group type
-      setGroup(groupData as Group);
+      // Use a proper type assertion with an intermediate unknown type to avoid direct casting errors
+      const typedGroupData = groupData as unknown as Group;
+      setGroup(typedGroupData);
       
       // Fetch group members with their profiles
       const { data: membersData, error: membersError } = await supabase
