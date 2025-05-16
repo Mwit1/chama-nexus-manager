@@ -15,8 +15,6 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardHeader,
-  CardTitle,
 } from "@/components/ui/card";
 import { UserPlus, Edit2, Trash2, ArrowLeft } from "lucide-react";
 import { useAuth } from '@/contexts/AuthContext';
@@ -72,15 +70,12 @@ const GroupMembers: React.FC = () => {
     try {
       setLoading(true);
       
-      // Fetch group details
+      // Fetch group details using RPC
       const { data: groupData, error: groupError } = await supabase
-        .from('groups')
-        .select('id, name, description')
-        .eq('id', groupId)
-        .single();
+        .rpc('get_group_by_id', { p_id: groupId });
       
       if (groupError) throw groupError;
-      if (!groupData) {
+      if (!groupData || groupData.length === 0) {
         toast({
           title: "Group not found",
           description: "The requested group does not exist.",
@@ -90,7 +85,7 @@ const GroupMembers: React.FC = () => {
         return;
       }
       
-      setGroup(groupData);
+      setGroup(groupData[0]);
       
       // Fetch group members with their profiles
       const { data: membersData, error: membersError } = await supabase
@@ -125,7 +120,7 @@ const GroupMembers: React.FC = () => {
       setUserRole(userRoleData?.role || null);
       
       // Format members data
-      const formattedMembers = membersData.map(member => ({
+      const formattedMembers = membersData.map((member: any) => ({
         id: member.id,
         full_name: member.profiles?.full_name || 'Unknown',
         phone_number: member.profiles?.phone_number || 'No phone number',

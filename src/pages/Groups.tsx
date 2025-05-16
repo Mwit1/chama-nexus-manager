@@ -14,8 +14,6 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardHeader,
-  CardTitle,
 } from "@/components/ui/card";
 import { PlusCircle, Edit, Trash2, Users } from "lucide-react";
 import { useAuth } from '@/contexts/AuthContext';
@@ -55,22 +53,18 @@ const Groups: React.FC = () => {
     try {
       setLoading(true);
       
-      // Fetch groups with member count
-      const { data, error } = await supabase
-        .from('groups')
-        .select(`
-          id, 
-          name, 
-          description, 
-          created_at, 
-          created_by
-        `);
+      // Using a stored procedure to fetch groups data since TypeScript doesn't recognize the table
+      const { data, error } = await supabase.rpc('get_groups');
       
       if (error) throw error;
+      if (!data) {
+        setGroups([]);
+        return;
+      }
       
       // Get member counts for each group
       const groupsWithMemberCounts = await Promise.all(
-        data.map(async (group) => {
+        data.map(async (group: any) => {
           const { count, error: countError } = await supabase
             .from('group_members')
             .select('*', { count: 'exact', head: true })

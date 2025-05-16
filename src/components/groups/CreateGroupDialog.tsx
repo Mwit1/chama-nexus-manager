@@ -65,10 +65,11 @@ const CreateGroupDialog: React.FC<CreateGroupDialogProps> = ({
     }
 
     try {
-      const { error } = await supabase.from('groups').insert({
-        name: values.name,
-        description: values.description || null,
-        created_by: user.id,
+      // Using raw SQL query through RPC to create a group since TypeScript doesn't recognize the table yet
+      const { data, error } = await supabase.rpc('create_group', {
+        p_name: values.name,
+        p_description: values.description || null,
+        p_created_by: user.id
       });
 
       if (error) throw error;
