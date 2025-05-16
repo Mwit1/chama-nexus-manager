@@ -65,9 +65,9 @@ const EditGroupDialog: React.FC<EditGroupDialogProps> = ({
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
-      // Update directly in the groups table instead of using RPC
+      // Update in groups table with type assertion
       const { error } = await supabase
-        .from('groups')
+        .from('groups' as any)
         .update({
           name: values.name,
           description: values.description || null,

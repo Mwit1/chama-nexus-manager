@@ -70,9 +70,9 @@ const GroupMembers: React.FC = () => {
     try {
       setLoading(true);
       
-      // Query groups table directly
+      // Query groups table with type assertion
       const { data: groupData, error: groupError } = await supabase
-        .from('groups')
+        .from('groups' as any)
         .select('*')
         .eq('id', groupId)
         .single();
@@ -88,7 +88,8 @@ const GroupMembers: React.FC = () => {
         return;
       }
       
-      setGroup(groupData);
+      // Cast groupData to Group type
+      setGroup(groupData as Group);
       
       // Fetch group members with their profiles
       const { data: membersData, error: membersError } = await supabase

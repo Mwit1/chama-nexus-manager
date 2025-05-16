@@ -65,16 +65,13 @@ const CreateGroupDialog: React.FC<CreateGroupDialogProps> = ({
     }
 
     try {
-      // Insert directly into groups table instead of using RPC
-      const { data, error } = await supabase
-        .from('groups')
+      // Insert directly into groups table
+      const { error } = await supabase.from('groups' as any)
         .insert({
           name: values.name,
           description: values.description || null,
           created_by: user.id
-        })
-        .select('id')
-        .single();
+        });
 
       if (error) throw error;
 

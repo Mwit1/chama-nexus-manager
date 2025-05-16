@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import { Button } from "@/components/ui/button";
@@ -30,6 +29,7 @@ type Group = {
   name: string;
   description: string | null;
   created_at: string;
+  created_by: string;
   member_count: number;
   is_creator: boolean;
 };
@@ -53,11 +53,10 @@ const Groups: React.FC = () => {
     try {
       setLoading(true);
       
-      // Query the groups table directly
+      // Query groups table with type assertion
       const { data, error } = await supabase
-        .from('groups')
-        .select('*')
-        .order('created_at', { ascending: false });
+        .from('groups' as any)
+        .select('*');
       
       if (error) throw error;
       if (!data) {
