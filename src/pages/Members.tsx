@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import { Button } from "@/components/ui/button";
@@ -28,6 +29,8 @@ type Member = {
   created_at: string;
 };
 
+type UserRole = 'admin' | 'treasurer' | 'member';
+
 const Members: React.FC = () => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -40,7 +43,7 @@ const Members: React.FC = () => {
   const [addMemberOpen, setAddMemberOpen] = useState(false);
   const [editMember, setEditMember] = useState<Member | null>(null);
   const [deleteMember, setDeleteMember] = useState<Member | null>(null);
-  const [userRole, setUserRole] = useState<string | null>(null);
+  const [userRole, setUserRole] = useState<UserRole | null>(null);
   
   useEffect(() => {
     if (user) {
@@ -60,8 +63,8 @@ const Members: React.FC = () => {
         
       if (roleError) throw roleError;
       
-      // Use type assertion to ensure userRole is typed correctly
-      setUserRole(isAdmin ? 'admin' : 'member' as 'admin' | 'treasurer' | 'member');
+      // Set user role with proper type
+      setUserRole(isAdmin ? 'admin' : 'member');
       
       // Fetch all profiles and their roles
       const { data: profiles, error: profilesError } = await supabase

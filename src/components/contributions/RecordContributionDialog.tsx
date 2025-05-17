@@ -68,6 +68,14 @@ type Member = {
   full_name: string | null;
 };
 
+type GroupMemberResponse = {
+  user_id: string;
+  profiles?: {
+    id: string;
+    full_name: string | null;
+  } | null;
+};
+
 const RecordContributionDialog: React.FC<RecordContributionDialogProps> = ({
   open,
   onOpenChange,
@@ -139,6 +147,7 @@ const RecordContributionDialog: React.FC<RecordContributionDialogProps> = ({
       setLoading(true);
       form.setValue('user_id', '');
       
+      // Specify the return type to handle the response properly
       const { data, error } = await supabase
         .from('group_members')
         .select(`
@@ -152,8 +161,11 @@ const RecordContributionDialog: React.FC<RecordContributionDialogProps> = ({
       
       if (error) throw error;
       
+      // Explicitly type and handle the data safely
+      const typedData = data as unknown as GroupMemberResponse[];
+      
       // Format members data with type safety
-      const formattedMembers: Member[] = data
+      const formattedMembers: Member[] = typedData
         .map(item => ({
           id: item.user_id,
           full_name: item.profiles?.full_name || null
