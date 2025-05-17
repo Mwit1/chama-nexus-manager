@@ -1,74 +1,60 @@
 
-import React from "react";
-import { UseFormReturn } from "react-hook-form";
-import { DialogFooter } from "@/components/ui/dialog";
+import React from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { contributionFormSchema } from './ContributionFormSchema';
 import { Button } from "@/components/ui/button";
-import { ContributionFormValues } from "./ContributionFormSchema";
-import GroupSelector from "./GroupSelector";
-import MemberSelector from "./MemberSelector";
-import AmountInput from "./AmountInput";
-import PaymentMethodSelector from "./PaymentMethodSelector";
-import DescriptionInput from "./DescriptionInput";
-import { Group, Member } from "@/types/contribution";
+import { Form } from "@/components/ui/form";
+import { ContributionFormValues } from "@/types/contribution";
+import GroupSelector from './GroupSelector';
+import MemberSelector from './MemberSelector';
+import AmountInput from './AmountInput';
+import PaymentMethodSelector from './PaymentMethodSelector';
+import DescriptionInput from './DescriptionInput';
 
 interface ContributionFormProps {
-  form: UseFormReturn<ContributionFormValues>;
-  groups: Group[];
-  members: Member[];
-  loading: boolean;
-  selectedGroup: string;
-  onGroupChange: (groupId: string) => void;
-  onOpenChange: (open: boolean) => void;
+  onSubmit: (values: ContributionFormValues) => void;
+  isSubmitting: boolean;
 }
 
 const ContributionForm: React.FC<ContributionFormProps> = ({
-  form,
-  groups,
-  members,
-  loading,
-  selectedGroup,
-  onGroupChange,
-  onOpenChange,
+  onSubmit,
+  isSubmitting
 }) => {
+  const form = useForm<ContributionFormValues>({
+    resolver: zodResolver(contributionFormSchema),
+    defaultValues: {
+      group_id: '',
+      user_id: '',
+      amount: 0,
+      payment_method: 'M-Pesa',
+      description: ''
+    }
+  });
+
+  const handleSubmit = (data: ContributionFormValues) => {
+    onSubmit(data);
+  };
+
   return (
-    <form onSubmit={form.handleSubmit} className="space-y-4 py-2">
-      <GroupSelector
-        form={form}
-        groups={groups}
-        onGroupChange={onGroupChange}
-        disabled={loading}
-      />
-      
-      <MemberSelector
-        form={form}
-        members={members}
-        disabled={loading}
-        selectedGroup={selectedGroup}
-      />
-      
-      <AmountInput form={form} disabled={loading} />
-      
-      <PaymentMethodSelector form={form} disabled={loading} />
-      
-      <DescriptionInput form={form} disabled={loading} />
-      
-      <DialogFooter className="pt-4">
-        <Button 
-          type="button" 
-          variant="outline" 
-          onClick={() => onOpenChange(false)}
-          disabled={loading}
-        >
-          Cancel
-        </Button>
-        <Button 
-          type="submit" 
-          disabled={loading || form.formState.isSubmitting}
-        >
-          {form.formState.isSubmitting || loading ? "Saving..." : "Record Contribution"}
-        </Button>
-      </DialogFooter>
-    </form>
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+        <GroupSelector form={form} />
+        <MemberSelector form={form} />
+        <AmountInput form={form} />
+        <PaymentMethodSelector form={form} />
+        <DescriptionInput form={form} />
+        
+        <div className="flex justify-end">
+          <Button
+            type="submit"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? "Recording..." : "Record Contribution"}
+          </Button>
+        </div>
+      </form>
+    </Form>
   );
 };
 

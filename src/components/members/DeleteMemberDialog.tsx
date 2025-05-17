@@ -12,11 +12,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from '@/integrations/supabase/client';
-
-interface Member {
-  id: string;
-  full_name: string | null;
-}
+import { type Member } from '@/hooks/useMembers';
 
 interface DeleteMemberDialogProps {
   open: boolean;
