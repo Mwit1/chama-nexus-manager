@@ -12,9 +12,10 @@ import {
 import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { contributionFormSchema, ContributionFormValues } from "./ContributionFormSchema";
+import { contributionFormSchema } from "./ContributionFormSchema";
 import ContributionForm from "./ContributionForm";
 import { useGroupMembers } from '@/hooks/useGroupMembers';
+import { ContributionFormValues } from "@/types/contribution";
 
 interface RecordContributionDialogProps {
   open: boolean;
@@ -44,7 +45,7 @@ const RecordContributionDialog: React.FC<RecordContributionDialogProps> = ({
     defaultValues: {
       group_id: "",
       user_id: "",
-      amount: undefined,
+      amount: undefined as any,
       payment_method: "M-Pesa",
       description: "",
     },
@@ -129,6 +130,8 @@ const RecordContributionDialog: React.FC<RecordContributionDialogProps> = ({
           loading={loading}
           selectedGroup={selectedGroup}
           onGroupChange={handleGroupChange}
+          onSubmit={onSubmit}
+          isSubmitting={form.formState.isSubmitting}
           onOpenChange={onOpenChange}
         />
       </DialogContent>
