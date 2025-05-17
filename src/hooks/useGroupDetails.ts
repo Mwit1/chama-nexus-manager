@@ -54,7 +54,7 @@ export function useGroupDetails(groupId: string | undefined, user: User | null) 
       const typedGroupData = groupData as unknown as Group;
       setGroup(typedGroupData);
       
-      // Fetch group members with their profiles
+      // Fix the group members query by joining the profiles table correctly
       const { data: membersData, error: membersError } = await supabase
         .from('group_members')
         .select(`
@@ -62,7 +62,7 @@ export function useGroupDetails(groupId: string | undefined, user: User | null) 
           role,
           joined_at,
           user_id,
-          profiles:user_id (
+          profiles (
             full_name,
             phone_number
           )

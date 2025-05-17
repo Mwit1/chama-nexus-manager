@@ -52,12 +52,12 @@ export function useGroupMembers() {
     try {
       setLoading(true);
       
-      // Specify the return type to handle the response properly
+      // Fix the query to correctly join profiles
       const { data, error } = await supabase
         .from('group_members')
         .select(`
           user_id,
-          profiles:user_id (
+          profiles (
             id,
             full_name
           )

@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from "@/components/ui/use-toast";
 
 export type Member = {
   id: string;
@@ -27,9 +27,12 @@ export function useMembers() {
     try {
       setLoading(true);
       
-      // Check if current user is an admin
+      // Check if current user is an admin - cast role to text to avoid function overloading issue
       const { data: isAdmin, error: roleError } = await supabase
-        .rpc('has_role', { user_id: userId, role: 'admin' });
+        .rpc('has_role', { 
+          user_id: userId, 
+          role: 'admin'  // Pass it as a string directly to avoid the overloading issue
+        });
         
       if (roleError) throw roleError;
       

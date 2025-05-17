@@ -82,12 +82,12 @@ const Contributions: React.FC = () => {
       const startDate = new Date(parseInt(year), parseInt(month) - 1, 1).toISOString();
       const endDate = new Date(parseInt(year), parseInt(month), 0).toISOString();
       
-      // Fetch contributions for the selected month
+      // Fix the query to join correctly for profiles and groups
       const { data: contribData, error: contribError } = await supabase
         .from('contributions')
         .select(`
           *,
-          groups:group_id (name),
+          groups (name),
           profiles:user_id (full_name)
         `)
         .gte('contribution_date', startDate)
@@ -149,6 +149,11 @@ const Contributions: React.FC = () => {
     });
   };
 
+  // Format currency to Kenya Shillings
+  const formatCurrency = (amount: number) => {
+    return `KES ${amount.toLocaleString()}`;
+  };
+
   // Filter contributions based on search term and filters
   const filteredContributions = contributions.filter(contribution => {
     const matchesSearch = 
@@ -180,7 +185,7 @@ const Contributions: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <div className="bg-primary/10 rounded-lg p-4">
             <p className="text-sm text-gray-500">This Month</p>
-            <h3 className="text-2xl font-bold">${thisMonthTotal.toFixed(2)}</h3>
+            <h3 className="text-2xl font-bold">{formatCurrency(thisMonthTotal)}</h3>
             <div className="flex items-center text-sm text-green-600 mt-1">
               <ArrowUp className="h-4 w-4 mr-1" /> 
               <span>{changeFromLastMonth}% from last month</span>
@@ -188,14 +193,14 @@ const Contributions: React.FC = () => {
           </div>
           <div className="bg-primary/10 rounded-lg p-4">
             <p className="text-sm text-gray-500">Expected This Month</p>
-            <h3 className="text-2xl font-bold">${expectedTotal.toFixed(2)}</h3>
+            <h3 className="text-2xl font-bold">{formatCurrency(expectedTotal)}</h3>
             <div className="flex items-center text-sm text-gray-600 mt-1">
               <span>{percentCompletion.toFixed(0)}% completion rate</span>
             </div>
           </div>
           <div className="bg-primary/10 rounded-lg p-4">
             <p className="text-sm text-gray-500">Outstanding</p>
-            <h3 className="text-2xl font-bold">${outstandingTotal.toFixed(2)}</h3>
+            <h3 className="text-2xl font-bold">{formatCurrency(outstandingTotal)}</h3>
             <div className="flex items-center text-sm text-red-600 mt-1">
               <span>{outstandingTotal > 0 ? '1 member pending' : 'All contributions received'}</span>
             </div>
@@ -219,7 +224,7 @@ const Contributions: React.FC = () => {
             onChange={(e) => setMethodFilter(e.target.value)}
           >
             <option value="all">All Methods</option>
-            <option value="mpesa">M-Pesa</option>
+            <option value="m-pesa">M-Pesa</option>
             <option value="bank transfer">Bank Transfer</option>
             <option value="cash">Cash</option>
           </select>
@@ -272,7 +277,7 @@ const Contributions: React.FC = () => {
                 filteredContributions.map((contribution) => (
                   <TableRow key={contribution.id}>
                     <TableCell className="font-medium">{contribution.member_name}</TableCell>
-                    <TableCell>${contribution.amount.toFixed(2)}</TableCell>
+                    <TableCell>{formatCurrency(contribution.amount)}</TableCell>
                     <TableCell>{new Date(contribution.contribution_date).toLocaleDateString()}</TableCell>
                     <TableCell>{contribution.payment_method}</TableCell>
                     <TableCell>
