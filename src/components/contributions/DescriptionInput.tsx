@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
 import { UseFormReturn } from "react-hook-form";
-import { ContributionFormValues } from "./ContributionFormSchema";
+import { ContributionFormValues } from "@/types/contribution";
 
 interface DescriptionInputProps {
   form: UseFormReturn<ContributionFormValues>;

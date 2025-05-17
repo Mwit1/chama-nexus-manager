@@ -1,6 +1,5 @@
 
 import * as z from "zod";
-import { PaymentMethod } from "@/types/contribution";
 
 export const contributionFormSchema = z.object({
   group_id: z.string({
@@ -21,4 +20,5 @@ export const contributionFormSchema = z.object({
   description: z.string().optional(),
 });
 
-export type ContributionFormValues = z.infer<typeof contributionFormSchema>;
+// We're not exporting ContributionFormValues type from here anymore
+// Instead we'll use the one from types/contribution.ts

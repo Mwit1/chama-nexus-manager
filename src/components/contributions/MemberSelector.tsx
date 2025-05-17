@@ -15,8 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { UseFormReturn } from "react-hook-form";
-import { ContributionFormValues } from "./ContributionFormSchema";
-import { Member } from "@/types/contribution";
+import { ContributionFormValues, Member } from "@/types/contribution";
 
 interface MemberSelectorProps {
   form: UseFormReturn<ContributionFormValues>;

@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { UseFormReturn } from "react-hook-form";
-import { ContributionFormValues } from "./ContributionFormSchema";
+import { ContributionFormValues } from "@/types/contribution";
 
 interface AmountInputProps {
   form: UseFormReturn<ContributionFormValues>;

@@ -15,8 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { UseFormReturn } from "react-hook-form";
-import { ContributionFormValues } from "./ContributionFormSchema";
-import { Group } from "@/types/contribution";
+import { ContributionFormValues, Group } from "@/types/contribution";
 
 interface GroupSelectorProps {
   form: UseFormReturn<ContributionFormValues>;

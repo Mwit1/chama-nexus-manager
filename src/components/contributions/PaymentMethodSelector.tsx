@@ -15,8 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { UseFormReturn } from "react-hook-form";
-import { ContributionFormValues } from "./ContributionFormSchema";
-import { PaymentMethod } from "@/types/contribution";
+import { ContributionFormValues, PaymentMethod } from "@/types/contribution";
 
 interface PaymentMethodSelectorProps {
   form: UseFormReturn<ContributionFormValues>;

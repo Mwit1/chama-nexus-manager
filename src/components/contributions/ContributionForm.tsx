@@ -5,13 +5,12 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { contributionFormSchema } from './ContributionFormSchema';
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
-import { ContributionFormValues } from "@/types/contribution";
+import { ContributionFormValues, Group, Member } from "@/types/contribution";
 import GroupSelector from './GroupSelector';
 import MemberSelector from './MemberSelector';
 import AmountInput from './AmountInput';
 import PaymentMethodSelector from './PaymentMethodSelector';
 import DescriptionInput from './DescriptionInput';
-import { Group, Member } from "@/types/contribution";
 
 interface ContributionFormProps {
   onSubmit: (values: ContributionFormValues) => void;
