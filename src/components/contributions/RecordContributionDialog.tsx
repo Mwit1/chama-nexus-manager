@@ -109,14 +109,14 @@ const RecordContributionDialog: React.FC<RecordContributionDialogProps> = ({
     try {
       setLoading(true);
       
-      // Type assertion for groups table
       const { data, error } = await supabase
-        .from('groups' as any)
+        .from('groups')
         .select('id, name');
       
       if (error) throw error;
       
-      setGroups(data || []);
+      // Use type assertion to ensure the data is treated as Group[]
+      setGroups(data as Group[] || []);
       
       if (data?.length > 0) {
         form.setValue('group_id', data[0].id);
@@ -152,13 +152,13 @@ const RecordContributionDialog: React.FC<RecordContributionDialogProps> = ({
       
       if (error) throw error;
       
-      // Format members data
-      const formattedMembers = data
+      // Format members data with type safety
+      const formattedMembers: Member[] = data
         .map(item => ({
           id: item.user_id,
-          full_name: item.profiles?.full_name
+          full_name: item.profiles?.full_name || null
         }))
-        .filter(member => member.id); // Filter out any null values
+        .filter((member): member is Member => !!member.id); // Type guard to ensure id exists
       
       setMembers(formattedMembers);
       

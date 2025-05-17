@@ -60,7 +60,8 @@ const Members: React.FC = () => {
         
       if (roleError) throw roleError;
       
-      setUserRole(isAdmin ? 'admin' : 'member');
+      // Use type assertion to ensure userRole is typed correctly
+      setUserRole(isAdmin ? 'admin' : 'member' as 'admin' | 'treasurer' | 'member');
       
       // Fetch all profiles and their roles
       const { data: profiles, error: profilesError } = await supabase
