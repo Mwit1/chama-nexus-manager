@@ -52,35 +52,58 @@ export function useGroupMembers() {
     try {
       setLoading(true);
       
-      // Fixed query to properly join with the profiles table using user_id
+      // Modify the query to use a more explicit join
       const { data, error } = await supabase
         .from('group_members')
         .select(`
           id,
           user_id,
           role,
-          joined_at,
-          profiles:user_id (
-            full_name,
-            phone_number
-          )
+          joined_at
         `)
         .eq('group_id', groupId);
       
       if (error) throw error;
       
-      // Format members data to match the Member type
-      const formattedMembers: Member[] = data ? data.map(item => ({
-        id: item.id,
-        user_id: item.user_id,
-        full_name: item.profiles?.full_name || null,
-        phone_number: item.profiles?.phone_number || null,
-        role: item.role || 'member',
-        joined_at: item.joined_at || new Date().toISOString()
-      })) : [];
+      // If we have group members, fetch their profile information
+      const membersWithProfiles: Member[] = [];
       
-      setMembers(formattedMembers);
-      return formattedMembers;
+      if (data && data.length > 0) {
+        // Get all user IDs to fetch their profiles
+        const userIds = data.map(member => member.user_id);
+        
+        // Fetch profiles for these users
+        const { data: profilesData, error: profilesError } = await supabase
+          .from('profiles')
+          .select('id, full_name, phone_number')
+          .in('id', userIds);
+        
+        if (profilesError) throw profilesError;
+        
+        // Create a map of profiles by user ID for easy lookup
+        const profilesMap = new Map();
+        if (profilesData) {
+          profilesData.forEach(profile => {
+            profilesMap.set(profile.id, profile);
+          });
+        }
+        
+        // Combine member data with profile data
+        data.forEach(member => {
+          const profile = profilesMap.get(member.user_id);
+          membersWithProfiles.push({
+            id: member.id,
+            user_id: member.user_id,
+            full_name: profile?.full_name || null,
+            phone_number: profile?.phone_number || null,
+            role: member.role || 'member',
+            joined_at: member.joined_at || new Date().toISOString()
+          });
+        });
+      }
+      
+      setMembers(membersWithProfiles);
+      return membersWithProfiles;
       
     } catch (error: any) {
       console.error('Error fetching group members:', error);

@@ -40,11 +40,11 @@ const DeleteGroupMemberDialog: React.FC<DeleteGroupMemberDialogProps> = ({
     try {
       setIsDeleting(true);
       
-      // Fix the query to correctly delete the group member
+      // Use member.id which is the group_members.id field, not user_id
       const { error } = await supabase
         .from('group_members')
         .delete()
-        .eq('user_id', member.id)
+        .eq('id', member.id)
         .eq('group_id', groupId);
 
       if (error) throw error;
