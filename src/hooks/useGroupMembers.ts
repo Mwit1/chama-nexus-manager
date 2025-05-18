@@ -60,7 +60,7 @@ export function useGroupMembers() {
           user_id,
           role,
           joined_at,
-          profiles:user_id (
+          profiles (
             full_name,
             phone_number
           )
