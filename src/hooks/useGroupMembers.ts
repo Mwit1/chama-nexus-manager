@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Group, Member, GroupMemberResponse } from '@/types/contribution';
+import { Group, Member } from '@/types/group';
 import { useToast } from "@/components/ui/use-toast";
 
 export function useGroupMembers() {
@@ -52,13 +52,13 @@ export function useGroupMembers() {
     try {
       setLoading(true);
       
-      // Fix the query to correctly join profiles and specify explicit type
+      // Modified query to properly join with profiles table
       const { data, error } = await supabase
         .from('group_members')
         .select(`
           id,
           user_id,
-          profiles:user_id (
+          profiles (
             full_name
           )
         `)
@@ -66,15 +66,18 @@ export function useGroupMembers() {
       
       if (error) throw error;
       
-      // Format members data with type safety
-      const formattedMembers: Member[] = (data || []).map(item => ({
+      // Format members data with type safety by properly accessing nested data
+      const formattedMembers: Member[] = data ? data.map(item => ({
         id: item.user_id,
         full_name: item.profiles?.full_name || null
-      })).filter((member): member is Member => !!member.id);
+      })) : [];
       
-      setMembers(formattedMembers);
+      // Filter out any items without an id
+      const validMembers = formattedMembers.filter((member): member is Member => !!member.id);
       
-      return formattedMembers;
+      setMembers(validMembers);
+      
+      return validMembers;
     } catch (error: any) {
       console.error('Error fetching group members:', error);
       toast({
