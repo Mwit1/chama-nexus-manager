@@ -78,6 +78,23 @@ AS $$
   WHERE id = p_id;
 $$;
 
+-- 6. Consolidated has_role function to prevent ambiguity
+CREATE OR REPLACE FUNCTION public.has_role(
+  p_user_id UUID,
+  p_role TEXT
+)
+RETURNS BOOLEAN
+LANGUAGE sql
+STABLE SECURITY DEFINER
+AS $$
+  SELECT EXISTS (
+    SELECT 1
+    FROM public.user_roles
+    WHERE user_id = p_user_id
+      AND role = p_role
+  );
+$$;
+
 -- Note to implementer: 
 -- These functions will help work around the TypeScript type issues by abstracting
 -- direct database table access. Please create these functions in your database

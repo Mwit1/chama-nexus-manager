@@ -52,25 +52,19 @@ export function useGroupMembers() {
     try {
       setLoading(true);
       
-      // Modify the query to use a more explicit join
-      const { data, error } = await supabase
+      // First, get all group members
+      const { data: membersData, error: membersError } = await supabase
         .from('group_members')
-        .select(`
-          id,
-          user_id,
-          role,
-          joined_at
-        `)
+        .select('id, user_id, role, joined_at')
         .eq('group_id', groupId);
       
-      if (error) throw error;
+      if (membersError) throw membersError;
       
-      // If we have group members, fetch their profile information
       const membersWithProfiles: Member[] = [];
       
-      if (data && data.length > 0) {
+      if (membersData && membersData.length > 0) {
         // Get all user IDs to fetch their profiles
-        const userIds = data.map(member => member.user_id);
+        const userIds = membersData.map(member => member.user_id);
         
         // Fetch profiles for these users
         const { data: profilesData, error: profilesError } = await supabase
@@ -89,7 +83,7 @@ export function useGroupMembers() {
         }
         
         // Combine member data with profile data
-        data.forEach(member => {
+        membersData.forEach(member => {
           const profile = profilesMap.get(member.user_id);
           membersWithProfiles.push({
             id: member.id,
