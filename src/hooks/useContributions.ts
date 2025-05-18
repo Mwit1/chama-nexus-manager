@@ -36,8 +36,12 @@ export function useContributions() {
         const year = currentDate.getFullYear();
         const month = String(currentDate.getMonth() + 1).padStart(2, '0');
         
-        startDate = new Date(parseInt(year), parseInt(month) - 1, 1).toISOString();
-        endDate = new Date(parseInt(year), parseInt(month), 0).toISOString();
+        // Fix the type mismatch by first converting numbers to strings
+        const yearString = year.toString();
+        const monthString = month.toString();
+        
+        startDate = new Date(parseInt(yearString), parseInt(monthString) - 1, 1).toISOString();
+        endDate = new Date(parseInt(yearString), parseInt(monthString), 0).toISOString();
       }
       
       // Fix the query to join correctly for profiles and groups
