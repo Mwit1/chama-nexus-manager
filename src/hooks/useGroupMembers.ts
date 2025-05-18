@@ -52,7 +52,7 @@ export function useGroupMembers() {
     try {
       setLoading(true);
       
-      // First, get all group members
+      // First, get all group members for the specified group
       const { data: membersData, error: membersError } = await supabase
         .from('group_members')
         .select('id, user_id, role, joined_at')
@@ -66,7 +66,7 @@ export function useGroupMembers() {
         // Get all user IDs to fetch their profiles
         const userIds = membersData.map(member => member.user_id);
         
-        // Fetch profiles for these users
+        // Fetch profiles for these users in a separate query
         const { data: profilesData, error: profilesError } = await supabase
           .from('profiles')
           .select('id, full_name, phone_number')
@@ -82,7 +82,7 @@ export function useGroupMembers() {
           });
         }
         
-        // Combine member data with profile data
+        // Combine member data with profile data using JavaScript
         membersData.forEach(member => {
           const profile = profilesMap.get(member.user_id);
           membersWithProfiles.push({
