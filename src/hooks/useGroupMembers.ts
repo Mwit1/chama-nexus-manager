@@ -52,13 +52,13 @@ export function useGroupMembers() {
     try {
       setLoading(true);
       
-      // Fix the query to correctly join profiles
+      // Fix the query to correctly join profiles and specify explicit type
       const { data, error } = await supabase
         .from('group_members')
         .select(`
+          id,
           user_id,
-          profiles (
-            id,
+          profiles:user_id (
             full_name
           )
         `)
@@ -66,16 +66,11 @@ export function useGroupMembers() {
       
       if (error) throw error;
       
-      // Explicitly type and handle the data safely
-      const typedData = data as unknown as GroupMemberResponse[];
-      
       // Format members data with type safety
-      const formattedMembers: Member[] = typedData
-        .map(item => ({
-          id: item.user_id,
-          full_name: item.profiles?.full_name || null
-        }))
-        .filter((member): member is Member => !!member.id); // Type guard to ensure id exists
+      const formattedMembers: Member[] = (data || []).map(item => ({
+        id: item.user_id,
+        full_name: item.profiles?.full_name || null
+      })).filter((member): member is Member => !!member.id);
       
       setMembers(formattedMembers);
       

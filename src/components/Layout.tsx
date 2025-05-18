@@ -39,9 +39,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               <a href="/groups" className="block py-2 px-4 hover:bg-primary-foreground/10">Groups</a>
             </li>
             <li>
-              <a href="/group-members/:id" className="block py-2 px-4 hover:bg-primary-foreground/10">Group Members</a>
-            </li>
-            <li>
               <a href="/contributions" className="block py-2 px-4 hover:bg-primary-foreground/10">Contributions</a>
             </li>
             <li>

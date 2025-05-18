@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Layout from '@/components/Layout';
 import { useAuth } from '@/contexts/AuthContext';
@@ -18,6 +18,7 @@ const GroupMembers: React.FC = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   
+  // Update to ensure groupId is passed as string
   const { 
     group, 
     members, 
@@ -30,6 +31,13 @@ const GroupMembers: React.FC = () => {
   const [addMemberOpen, setAddMemberOpen] = useState(false);
   const [editMember, setEditMember] = useState<Member | null>(null);
   const [deleteMember, setDeleteMember] = useState<Member | null>(null);
+
+  // Ensure groupId is defined before fetching
+  useEffect(() => {
+    if (user && groupId) {
+      fetchGroupAndMembers();
+    }
+  }, [groupId, user]);
 
   const handleAddMemberSuccess = () => {
     setAddMemberOpen(false);
