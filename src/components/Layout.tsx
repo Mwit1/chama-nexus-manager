@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Menu } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useMediaQuery } from "@/hooks/use-mobile";
+import { useIsMobile } from "@/hooks/use-mobile";
 import NavbarUserMenu from './NavbarUserMenu';
 
 interface LayoutProps {
@@ -11,7 +11,7 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const isMobile = useMediaQuery("(max-width: 768px)");
+  const isMobile = useIsMobile();
   
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
@@ -37,6 +37,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             </li>
             <li>
               <a href="/groups" className="block py-2 px-4 hover:bg-primary-foreground/10">Groups</a>
+            </li>
+            <li>
+              <a href="/group-members/:id" className="block py-2 px-4 hover:bg-primary-foreground/10">Group Members</a>
             </li>
             <li>
               <a href="/contributions" className="block py-2 px-4 hover:bg-primary-foreground/10">Contributions</a>
