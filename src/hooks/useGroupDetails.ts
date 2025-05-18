@@ -15,24 +15,13 @@ export function useGroupDetails(groupId: string | undefined, user: User | null) 
   const [loading, setLoading] = useState(true);
   const [userRole, setUserRole] = useState<UserRole>(null);
 
-  useEffect(() => {
-    if (!groupId) {
-      navigate('/groups');
-      return;
-    }
-    
-    if (user) {
-      fetchGroupAndMembers();
-    }
-  }, [groupId, user]);
-
   const fetchGroupAndMembers = async () => {
     if (!user || !groupId) return;
     
     try {
       setLoading(true);
       
-      // Query groups table with type assertion
+      // Query groups table
       const { data: groupData, error: groupError } = await supabase
         .from('groups')
         .select('*')
@@ -50,9 +39,7 @@ export function useGroupDetails(groupId: string | undefined, user: User | null) 
         return;
       }
       
-      // Use a proper type assertion with an intermediate unknown type to avoid direct casting errors
-      const typedGroupData = groupData as unknown as Group;
-      setGroup(typedGroupData);
+      setGroup(groupData as Group);
       
       // Fix the group members query by joining the profiles table correctly
       const { data: membersData, error: membersError } = await supabase
@@ -62,7 +49,7 @@ export function useGroupDetails(groupId: string | undefined, user: User | null) 
           role,
           joined_at,
           user_id,
-          profiles (
+          profiles:user_id (
             full_name,
             phone_number
           )
@@ -109,6 +96,17 @@ export function useGroupDetails(groupId: string | undefined, user: User | null) 
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (!groupId) {
+      navigate('/groups');
+      return;
+    }
+    
+    if (user) {
+      fetchGroupAndMembers();
+    }
+  }, [groupId, user]);
 
   const canManageMembers = userRole === 'admin' || userRole === 'treasurer';
 

@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,23 +12,84 @@ import {
   TableRow 
 } from "@/components/ui/table";
 import { CreditCard, Search } from "lucide-react";
+import { useAuth } from '@/contexts/AuthContext';
+import { useLoans } from '@/hooks/useLoans';
+import NewLoanApplicationDialog from '@/components/loans/NewLoanApplicationDialog';
 
 const Loans: React.FC = () => {
-  // Mock data for loans
-  const loans = [
-    { id: 1, member: 'John Doe', amount: '$2,000', interestRate: '10%', issued: '10 Apr 2023', dueDate: '10 Jul 2023', status: 'Active', balance: '$1,500' },
-    { id: 2, member: 'Jane Smith', amount: '$1,500', interestRate: '12%', issued: '15 Apr 2023', dueDate: '15 Jun 2023', status: 'Active', balance: '$1,000' },
-    { id: 3, member: 'Michael Johnson', amount: '$3,000', interestRate: '8%', issued: '20 Mar 2023', dueDate: '20 Jun 2023', status: 'Active', balance: '$1,800' },
-    { id: 4, member: 'Sara Williams', amount: '$1,000', interestRate: '15%', issued: '05 Feb 2023', dueDate: '05 May 2023', status: 'Overdue', balance: '$400' },
-    { id: 5, member: 'Robert Brown', amount: '$2,500', interestRate: '10%', issued: '01 Jan 2023', dueDate: '01 Apr 2023', status: 'Repaid', balance: '$0' },
-  ];
+  const { user } = useAuth();
+  const {
+    loans,
+    loading,
+    activeLoansTotal,
+    expectedInterest,
+    overdueAmount,
+    repaidThisMonth,
+    fetchLoans,
+    formatCurrency
+  } = useLoans();
+
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [selectedMonth, setSelectedMonth] = useState('');
+
+  const [newLoanDialogOpen, setNewLoanDialogOpen] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      const currentDate = new Date();
+      const year = currentDate.getFullYear();
+      const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+      setSelectedMonth(`${year}-${month}`);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (selectedMonth && user) {
+      const [year, month] = selectedMonth.split('-');
+      if (year && month) {
+        const startDate = new Date(parseInt(year), parseInt(month) - 1, 1).toISOString();
+        const endDate = new Date(parseInt(year), parseInt(month), 0).toISOString();
+        fetchLoans(startDate, endDate);
+      }
+    }
+  }, [selectedMonth, user]);
+
+  const handleNewLoanSuccess = () => {
+    setNewLoanDialogOpen(false);
+    
+    // Refetch loans with current selected month
+    if (selectedMonth) {
+      const [year, month] = selectedMonth.split('-');
+      if (year && month) {
+        const startDate = new Date(parseInt(year), parseInt(month) - 1, 1).toISOString();
+        const endDate = new Date(parseInt(year), parseInt(month), 0).toISOString();
+        fetchLoans(startDate, endDate);
+      }
+    }
+  };
+
+  // Filter loans based on search term and filters
+  const filteredLoans = loans.filter(loan => {
+    const matchesSearch = 
+      loan.member_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      loan.purpose.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      loan.status.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesStatus = statusFilter === 'all' || loan.status.toLowerCase() === statusFilter.toLowerCase();
+    
+    return matchesSearch && matchesStatus;
+  });
 
   return (
     <Layout>
       <div className="bg-white shadow-md rounded-lg p-8">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">Loans</h1>
-          <Button className="flex items-center gap-2">
+          <Button 
+            className="flex items-center gap-2"
+            onClick={() => setNewLoanDialogOpen(true)}
+          >
             <CreditCard className="h-4 w-4" />
             New Loan Application
           </Button>
@@ -38,23 +99,23 @@ const Loans: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
           <div className="bg-primary/10 rounded-lg p-4">
             <p className="text-sm text-gray-500">Active Loans</p>
-            <h3 className="text-2xl font-bold">$7,000</h3>
-            <p className="text-sm text-gray-500">3 active loans</p>
+            <h3 className="text-2xl font-bold">{formatCurrency(activeLoansTotal)}</h3>
+            <p className="text-sm text-gray-500">{loans.filter(loan => loan.status === 'Active').length} active loans</p>
           </div>
           <div className="bg-primary/10 rounded-lg p-4">
             <p className="text-sm text-gray-500">Expected Interest</p>
-            <h3 className="text-2xl font-bold">$630</h3>
-            <p className="text-sm text-gray-500">Avg. 9% rate</p>
+            <h3 className="text-2xl font-bold">{formatCurrency(expectedInterest)}</h3>
+            <p className="text-sm text-gray-500">Avg. {(expectedInterest / activeLoansTotal * 100).toFixed(1)}% rate</p>
           </div>
           <div className="bg-red-100 rounded-lg p-4">
             <p className="text-sm text-red-700">Overdue Amount</p>
-            <h3 className="text-2xl font-bold text-red-700">$400</h3>
-            <p className="text-sm text-red-700">1 overdue loan</p>
+            <h3 className="text-2xl font-bold text-red-700">{formatCurrency(overdueAmount)}</h3>
+            <p className="text-sm text-red-700">{loans.filter(loan => loan.status === 'Overdue').length} overdue loan(s)</p>
           </div>
           <div className="bg-green-100 rounded-lg p-4">
             <p className="text-sm text-green-700">Repaid This Month</p>
-            <h3 className="text-2xl font-bold text-green-700">$2,500</h3>
-            <p className="text-sm text-green-700">1 completed loan</p>
+            <h3 className="text-2xl font-bold text-green-700">{formatCurrency(repaidThisMonth)}</h3>
+            <p className="text-sm text-green-700">{loans.filter(loan => loan.status === 'Repaid').length} completed loan(s)</p>
           </div>
         </div>
         
@@ -65,18 +126,28 @@ const Loans: React.FC = () => {
             <Input 
               placeholder="Search loans..." 
               className="pl-10" 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <select className="border border-gray-300 rounded-md px-4 py-2">
+          <select 
+            className="border border-gray-300 rounded-md px-4 py-2"
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+          >
             <option value="all">All Status</option>
+            <option value="pending">Pending</option>
+            <option value="approved">Approved</option>
             <option value="active">Active</option>
             <option value="overdue">Overdue</option>
             <option value="repaid">Repaid</option>
+            <option value="rejected">Rejected</option>
           </select>
           <Input
             type="month"
             className="w-40"
-            defaultValue="2023-05"
+            value={selectedMonth}
+            onChange={(e) => setSelectedMonth(e.target.value)}
           />
         </div>
         
@@ -96,32 +167,55 @@ const Loans: React.FC = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {loans.map((loan) => (
-                <TableRow key={loan.id}>
-                  <TableCell className="font-medium">{loan.member}</TableCell>
-                  <TableCell>{loan.amount}</TableCell>
-                  <TableCell>{loan.interestRate}</TableCell>
-                  <TableCell>{loan.issued}</TableCell>
-                  <TableCell>{loan.dueDate}</TableCell>
-                  <TableCell>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      loan.status === 'Active' ? 'bg-blue-100 text-blue-800' :
-                      loan.status === 'Overdue' ? 'bg-red-100 text-red-800' :
-                      'bg-green-100 text-green-800'
-                    }`}>
-                      {loan.status}
-                    </span>
-                  </TableCell>
-                  <TableCell>{loan.balance}</TableCell>
-                  <TableCell className="text-right">
-                    <Button variant="outline" size="sm">Manage</Button>
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={8} className="text-center py-8">
+                    Loading loans...
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : filteredLoans.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={8} className="text-center py-8">
+                    No loans found for this period.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filteredLoans.map((loan) => (
+                  <TableRow key={loan.id}>
+                    <TableCell className="font-medium">{loan.member_name}</TableCell>
+                    <TableCell>{formatCurrency(loan.amount)}</TableCell>
+                    <TableCell>{loan.interest_rate}%</TableCell>
+                    <TableCell>{loan.issued_date ? new Date(loan.issued_date).toLocaleDateString() : 'Not issued'}</TableCell>
+                    <TableCell>{loan.due_date ? new Date(loan.due_date).toLocaleDateString() : 'Not set'}</TableCell>
+                    <TableCell>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        loan.status === 'Active' ? 'bg-blue-100 text-blue-800' :
+                        loan.status === 'Overdue' ? 'bg-red-100 text-red-800' :
+                        loan.status === 'Repaid' ? 'bg-green-100 text-green-800' :
+                        loan.status === 'Pending' ? 'bg-yellow-100 text-yellow-800' :
+                        loan.status === 'Approved' ? 'bg-purple-100 text-purple-800' :
+                        'bg-gray-100 text-gray-800'
+                      }`}>
+                        {loan.status}
+                      </span>
+                    </TableCell>
+                    <TableCell>{formatCurrency(loan.balance)}</TableCell>
+                    <TableCell className="text-right">
+                      <Button variant="outline" size="sm">Manage</Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </div>
       </div>
+
+      <NewLoanApplicationDialog
+        open={newLoanDialogOpen}
+        onOpenChange={setNewLoanDialogOpen}
+        onSuccess={handleNewLoanSuccess}
+      />
     </Layout>
   );
 };

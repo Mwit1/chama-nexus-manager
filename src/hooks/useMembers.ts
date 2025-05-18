@@ -27,19 +27,22 @@ export function useMembers() {
     try {
       setLoading(true);
       
-      // Check if current user is an admin - cast role to text to avoid function overloading issue
+      // Check if current user is an admin
       const { data: isAdmin, error: roleError } = await supabase
         .rpc('has_role', { 
           user_id: userId, 
-          role: 'admin'  // Pass it as a string directly to avoid the overloading issue
+          role: 'admin'
         });
         
-      if (roleError) throw roleError;
+      if (roleError) {
+        console.error('Error checking user role:', roleError);
+        throw roleError;
+      }
       
       // Set user role with proper type assertion
       setUserRole(isAdmin ? 'admin' : 'member');
       
-      // Fetch all profiles and their roles
+      // Fetch all profiles
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
         .select('*')
