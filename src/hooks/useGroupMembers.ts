@@ -52,32 +52,36 @@ export function useGroupMembers() {
     try {
       setLoading(true);
       
-      // Modified query to properly join with profiles table
+      // Fixed query to properly join with the profiles table using user_id
       const { data, error } = await supabase
         .from('group_members')
         .select(`
           id,
           user_id,
-          profiles (
-            full_name
+          role,
+          joined_at,
+          profiles:user_id (
+            full_name,
+            phone_number
           )
         `)
         .eq('group_id', groupId);
       
       if (error) throw error;
       
-      // Format members data with type safety by properly accessing nested data
+      // Format members data to match the Member type
       const formattedMembers: Member[] = data ? data.map(item => ({
-        id: item.user_id,
-        full_name: item.profiles?.full_name || null
+        id: item.id,
+        user_id: item.user_id,
+        full_name: item.profiles?.full_name || null,
+        phone_number: item.profiles?.phone_number || null,
+        role: item.role || 'member',
+        joined_at: item.joined_at || new Date().toISOString()
       })) : [];
       
-      // Filter out any items without an id
-      const validMembers = formattedMembers.filter((member): member is Member => !!member.id);
+      setMembers(formattedMembers);
+      return formattedMembers;
       
-      setMembers(validMembers);
-      
-      return validMembers;
     } catch (error: any) {
       console.error('Error fetching group members:', error);
       toast({
