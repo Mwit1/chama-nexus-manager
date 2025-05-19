@@ -1,187 +1,51 @@
 
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState } from 'react';
 import Layout from '@/components/Layout';
-import { Button } from "@/components/ui/button";
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from "@/components/ui/table";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-} from "@/components/ui/card";
-import { PlusCircle, Users } from "lucide-react";
-import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-
-interface Group {
-  id: string;
-  name: string;
-  description: string | null;
-  created_at: string;
-  member_count: number;
-}
+import GroupsHeader from '@/components/groups/GroupsHeader';
+import GroupsTable from '@/components/groups/GroupsTable';
+import EmptyGroupsState from '@/components/groups/EmptyGroupsState';
+import CreateGroupDialog from '@/components/groups/CreateGroupDialog';
+import { useGroups } from '@/hooks/useGroups';
 
 const Groups: React.FC = () => {
-  const { user } = useAuth();
   const { toast } = useToast();
-  const [groups, setGroups] = useState<Group[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetchGroups();
-  }, [user]);
-
-  const fetchGroups = async () => {
-    if (!user) return;
-    
-    try {
-      setLoading(true);
-      
-      // Get all groups
-      const { data: groupsData, error: groupsError } = await supabase
-        .from('groups')
-        .select('*');
-      
-      if (groupsError) throw groupsError;
-      
-      if (!groupsData || groupsData.length === 0) {
-        setGroups([]);
-        return;
-      }
-      
-      // Get member counts for each group
-      const groupsWithCounts = await Promise.all(
-        groupsData.map(async (group) => {
-          try {
-            const { count, error } = await supabase
-              .from('group_members')
-              .select('*', { count: 'exact', head: true })
-              .eq('group_id', group.id);
-              
-            return {
-              ...group,
-              member_count: count || 0
-            };
-          } catch (err) {
-            console.error(`Error getting member count for group ${group.id}:`, err);
-            return {
-              ...group,
-              member_count: 0
-            };
-          }
-        })
-      );
-      
-      setGroups(groupsWithCounts);
-    } catch (error: any) {
-      console.error('Error fetching groups:', error);
-      toast({
-        title: "Error fetching groups",
-        description: error.message,
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { groups, loading, fetchGroups } = useGroups();
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
 
   const handleCreateGroup = () => {
+    setShowCreateDialog(true);
+  };
+
+  const handleCreateSuccess = () => {
+    setShowCreateDialog(false);
+    fetchGroups();
     toast({
-      title: "Feature coming soon",
-      description: "Creating new groups will be available soon."
+      title: "Group created",
+      description: "Your new group has been created successfully."
     });
   };
 
   return (
     <Layout>
       <div className="bg-white shadow-md rounded-lg p-8">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold">Chama Groups</h1>
-          <Button 
-            className="flex items-center gap-2"
-            onClick={handleCreateGroup}
-          >
-            <PlusCircle className="h-4 w-4" />
-            Create Group
-          </Button>
-        </div>
+        <GroupsHeader onCreateGroup={handleCreateGroup} />
 
         {loading ? (
           <div className="flex justify-center my-8">
             <p>Loading groups...</p>
           </div>
         ) : groups.length === 0 ? (
-          <Card className="mt-8">
-            <CardContent className="pt-8 pb-8 text-center">
-              <CardDescription>
-                You haven't created or joined any groups yet.
-                <p className="mt-2">
-                  <Button 
-                    variant="outline" 
-                    onClick={handleCreateGroup}
-                  >
-                    Create your first group
-                  </Button>
-                </p>
-              </CardDescription>
-            </CardContent>
-          </Card>
+          <EmptyGroupsState onCreateGroup={handleCreateGroup} />
         ) : (
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Description</TableHead>
-                  <TableHead>Members</TableHead>
-                  <TableHead>Created</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {groups.map((group) => (
-                  <TableRow key={group.id}>
-                    <TableCell className="font-medium">{group.name}</TableCell>
-                    <TableCell>{group.description || "No description"}</TableCell>
-                    <TableCell>{group.member_count}</TableCell>
-                    <TableCell>{new Date(group.created_at).toLocaleDateString()}</TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button 
-                                size="icon" 
-                                variant="outline"
-                                asChild
-                              >
-                                <Link to={`/group-members/${group.id}`}>
-                                  <Users className="h-4 w-4" />
-                                </Link>
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>View members</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+          <GroupsTable groups={groups} />
         )}
+
+        <CreateGroupDialog
+          open={showCreateDialog}
+          onOpenChange={setShowCreateDialog}
+          onSuccess={handleCreateSuccess}
+        />
       </div>
     </Layout>
   );
