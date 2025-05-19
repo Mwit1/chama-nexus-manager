@@ -1,4 +1,6 @@
+
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import Layout from '@/components/Layout';
 import { Button } from "@/components/ui/button";
 import { 
@@ -14,34 +16,25 @@ import {
   CardContent,
   CardDescription,
 } from "@/components/ui/card";
-import { PlusCircle, Edit, Trash2, Users } from "lucide-react";
+import { PlusCircle, Users } from "lucide-react";
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
-import CreateGroupDialog from '@/components/groups/CreateGroupDialog';
-import EditGroupDialog from '@/components/groups/EditGroupDialog';
-import DeleteGroupDialog from '@/components/groups/DeleteGroupDialog';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Link } from 'react-router-dom';
 
-type Group = {
+interface Group {
   id: string;
   name: string;
   description: string | null;
   created_at: string;
-  created_by: string;
   member_count: number;
-  is_creator: boolean;
-};
+}
 
 const Groups: React.FC = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [groups, setGroups] = useState<Group[]>([]);
   const [loading, setLoading] = useState(true);
-  const [createGroupOpen, setCreateGroupOpen] = useState(false);
-  const [editGroup, setEditGroup] = useState<Group | null>(null);
-  const [deleteGroup, setDeleteGroup] = useState<Group | null>(null);
 
   useEffect(() => {
     fetchGroups();
@@ -53,36 +46,42 @@ const Groups: React.FC = () => {
     try {
       setLoading(true);
       
-      // Query groups table with type assertion
-      const { data, error } = await supabase
-        .from('groups' as any)
+      // Get all groups
+      const { data: groupsData, error: groupsError } = await supabase
+        .from('groups')
         .select('*');
       
-      if (error) throw error;
-      if (!data) {
+      if (groupsError) throw groupsError;
+      
+      if (!groupsData || groupsData.length === 0) {
         setGroups([]);
         return;
       }
       
       // Get member counts for each group
-      const groupsWithMemberCounts = await Promise.all(
-        data.map(async (group: any) => {
-          const { count, error: countError } = await supabase
-            .from('group_members')
-            .select('*', { count: 'exact', head: true })
-            .eq('group_id', group.id);
-            
-          if (countError) throw countError;
-          
-          return {
-            ...group,
-            member_count: count || 0,
-            is_creator: group.created_by === user.id
-          };
+      const groupsWithCounts = await Promise.all(
+        groupsData.map(async (group) => {
+          try {
+            const { count, error } = await supabase
+              .from('group_members')
+              .select('*', { count: 'exact', head: true })
+              .eq('group_id', group.id);
+              
+            return {
+              ...group,
+              member_count: count || 0
+            };
+          } catch (err) {
+            console.error(`Error getting member count for group ${group.id}:`, err);
+            return {
+              ...group,
+              member_count: 0
+            };
+          }
         })
       );
       
-      setGroups(groupsWithMemberCounts);
+      setGroups(groupsWithCounts);
     } catch (error: any) {
       console.error('Error fetching groups:', error);
       toast({
@@ -95,30 +94,10 @@ const Groups: React.FC = () => {
     }
   };
 
-  const handleCreateGroupSuccess = () => {
-    setCreateGroupOpen(false);
-    fetchGroups();
+  const handleCreateGroup = () => {
     toast({
-      title: "Group created",
-      description: "Your group has been created successfully."
-    });
-  };
-
-  const handleEditGroupSuccess = () => {
-    setEditGroup(null);
-    fetchGroups();
-    toast({
-      title: "Group updated",
-      description: "Group information has been updated successfully."
-    });
-  };
-
-  const handleDeleteGroupSuccess = () => {
-    setDeleteGroup(null);
-    fetchGroups();
-    toast({
-      title: "Group deleted",
-      description: "The group has been deleted successfully."
+      title: "Feature coming soon",
+      description: "Creating new groups will be available soon."
     });
   };
 
@@ -129,7 +108,7 @@ const Groups: React.FC = () => {
           <h1 className="text-2xl font-bold">Chama Groups</h1>
           <Button 
             className="flex items-center gap-2"
-            onClick={() => setCreateGroupOpen(true)}
+            onClick={handleCreateGroup}
           >
             <PlusCircle className="h-4 w-4" />
             Create Group
@@ -148,7 +127,7 @@ const Groups: React.FC = () => {
                 <p className="mt-2">
                   <Button 
                     variant="outline" 
-                    onClick={() => setCreateGroupOpen(true)}
+                    onClick={handleCreateGroup}
                   >
                     Create your first group
                   </Button>
@@ -195,44 +174,6 @@ const Groups: React.FC = () => {
                             </TooltipContent>
                           </Tooltip>
                         </TooltipProvider>
-                        
-                        {group.is_creator && (
-                          <>
-                            <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button 
-                                    size="icon" 
-                                    variant="outline"
-                                    onClick={() => setEditGroup(group)}
-                                  >
-                                    <Edit className="h-4 w-4" />
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  <p>Edit group</p>
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
-                            
-                            <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button 
-                                    size="icon" 
-                                    variant="destructive"
-                                    onClick={() => setDeleteGroup(group)}
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  <p>Delete group</p>
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
-                          </>
-                        )}
                       </div>
                     </TableCell>
                   </TableRow>
@@ -242,30 +183,6 @@ const Groups: React.FC = () => {
           </div>
         )}
       </div>
-
-      <CreateGroupDialog 
-        open={createGroupOpen} 
-        onOpenChange={setCreateGroupOpen}
-        onSuccess={handleCreateGroupSuccess}
-      />
-      
-      {editGroup && (
-        <EditGroupDialog 
-          open={!!editGroup} 
-          onOpenChange={() => setEditGroup(null)}
-          group={editGroup}
-          onSuccess={handleEditGroupSuccess}
-        />
-      )}
-      
-      {deleteGroup && (
-        <DeleteGroupDialog 
-          open={!!deleteGroup} 
-          onOpenChange={() => setDeleteGroup(null)}
-          group={deleteGroup}
-          onSuccess={handleDeleteGroupSuccess}
-        />
-      )}
     </Layout>
   );
 };
