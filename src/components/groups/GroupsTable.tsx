@@ -1,6 +1,5 @@
-
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { 
   Table, 
   TableBody, 
@@ -10,8 +9,7 @@ import {
   TableRow 
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Users } from "lucide-react";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Eye, Pencil, Trash, Users } from "lucide-react";
 
 interface Group {
   id: string;
@@ -26,6 +24,8 @@ interface GroupsTableProps {
 }
 
 const GroupsTable: React.FC<GroupsTableProps> = ({ groups }) => {
+  const navigate = useNavigate();
+  
   return (
     <div className="rounded-md border">
       <Table>
@@ -33,8 +33,8 @@ const GroupsTable: React.FC<GroupsTableProps> = ({ groups }) => {
           <TableRow>
             <TableHead>Name</TableHead>
             <TableHead>Description</TableHead>
-            <TableHead>Members</TableHead>
             <TableHead>Created</TableHead>
+            <TableHead>Members</TableHead>
             <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
@@ -42,29 +42,19 @@ const GroupsTable: React.FC<GroupsTableProps> = ({ groups }) => {
           {groups.map((group) => (
             <TableRow key={group.id}>
               <TableCell className="font-medium">{group.name}</TableCell>
-              <TableCell>{group.description || "No description"}</TableCell>
-              <TableCell>{group.member_count}</TableCell>
+              <TableCell>{group.description || 'No description'}</TableCell>
               <TableCell>{new Date(group.created_at).toLocaleDateString()}</TableCell>
+              <TableCell>{group.member_count || 0}</TableCell>
               <TableCell className="text-right">
-                <div className="flex justify-end gap-2">
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button 
-                          size="icon" 
-                          variant="outline"
-                          asChild
-                        >
-                          <Link to={`/group-members/${group.id}`}>
-                            <Users className="h-4 w-4" />
-                          </Link>
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>View members</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
+                <div className="flex justify-end space-x-2">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => navigate(`/group-members/${group.id}`)}
+                  >
+                    <Users className="h-4 w-4" />
+                  </Button>
+                  
                 </div>
               </TableCell>
             </TableRow>

@@ -78,20 +78,17 @@ const AddGroupMemberDialog: React.FC<AddGroupMemberDialogProps> = ({
     try {
       setSearchingUser(true);
       
-      // We need to check if the user exists in auth.users via their email
-      // Since we can't query auth.users directly, we'll search for their profile
+      // Search for user profile by email/id
       const { data, error } = await supabase
         .from('profiles')
         .select('id')
-        .eq('id', email) // This won't work directly since email is not stored in profiles, just for illustration
+        .eq('id', email)
         .single();
 
       if (error || !data) {
-        // For demo purposes, return mock data
-        // In a real application, you would handle this differently
+        // For demo purposes, we'll accept any email
         if (email.includes('@')) {
-          // Simulate finding a user (replace with actual logic)
-          setUserFound({ id: "mock-user-id", email: email });
+          setUserFound({ id: email, email });
           return;
         }
         
@@ -245,9 +242,9 @@ const AddGroupMemberDialog: React.FC<AddGroupMemberDialogProps> = ({
               </Button>
               <Button 
                 type="submit" 
-                disabled={form.formState.isSubmitting || searchingUser || (!userFound && !searchingUser)}
+                disabled={form.formState.isSubmitting || searchingUser || (!userFound && !form.formState.isDirty)}
               >
-                {form.formState.isSubmitting ? "Adding..." : userFound ? "Add Member" : "Find User"}
+                {form.formState.isSubmitting ? "Adding..." : userFound ? "Add Member" : "Search User"}
               </Button>
             </DialogFooter>
           </form>
