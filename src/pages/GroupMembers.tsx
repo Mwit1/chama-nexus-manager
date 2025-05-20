@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Layout from '@/components/Layout';
 import { useAuth } from '@/contexts/AuthContext';
@@ -7,8 +7,10 @@ import { useToast } from '@/components/ui/use-toast';
 import GroupMembersHeader from '@/components/groups/GroupMembersHeader'; 
 import GroupMembersList from '@/components/groups/GroupMembersList';
 import AddGroupMemberDialog from '@/components/groups/AddGroupMemberDialog';
+import EditGroupMemberDialog from '@/components/groups/EditGroupMemberDialog';
+import DeleteGroupMemberDialog from '@/components/groups/DeleteGroupMemberDialog';
 import { useGroupDetails } from '@/hooks/useGroupDetails';
-import { Member, Group } from '@/types/group';
+import { useGroupMemberOperations } from '@/hooks/useGroupMemberOperations';
 
 const GroupMembers: React.FC = () => {
   const { id: groupId } = useParams<{ id: string }>();
@@ -16,10 +18,7 @@ const GroupMembers: React.FC = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   
-  const [showAddMemberDialog, setShowAddMemberDialog] = useState(false);
-  const [editMember, setEditMember] = useState<Member | null>(null);
-  const [deleteMember, setDeleteMember] = useState<Member | null>(null);
-  
+  // Custom hooks
   const { 
     group, 
     members, 
@@ -29,16 +28,26 @@ const GroupMembers: React.FC = () => {
     fetchGroupAndMembers 
   } = useGroupDetails(groupId, user);
   
+  const {
+    showAddMemberDialog,
+    openAddMemberDialog,
+    closeAddMemberDialog,
+    editMember,
+    openEditMemberDialog,
+    closeEditMemberDialog,
+    deleteMember,
+    openDeleteMemberDialog,
+    closeDeleteMemberDialog
+  } = useGroupMemberOperations();
+  
+  // Navigation handlers
   const handleBackClick = () => {
     navigate('/groups');
   };
   
-  const handleAddMemberClick = () => {
-    setShowAddMemberDialog(true);
-  };
-  
+  // Success handlers
   const handleAddMemberSuccess = () => {
-    setShowAddMemberDialog(false);
+    closeAddMemberDialog();
     toast({
       title: "Member added",
       description: "The member has been added to the group successfully."
@@ -46,12 +55,14 @@ const GroupMembers: React.FC = () => {
     fetchGroupAndMembers();
   };
   
-  const handleEditMember = (member: Member) => {
-    setEditMember(member);
+  const handleEditMemberSuccess = () => {
+    closeEditMemberDialog();
+    fetchGroupAndMembers();
   };
   
-  const handleDeleteMember = (member: Member) => {
-    setDeleteMember(member);
+  const handleDeleteMemberSuccess = () => {
+    closeDeleteMemberDialog();
+    fetchGroupAndMembers();
   };
   
   return (
@@ -61,7 +72,7 @@ const GroupMembers: React.FC = () => {
           group={group}
           canManageMembers={canManageMembers}
           onBackClick={handleBackClick}
-          onAddMemberClick={handleAddMemberClick}
+          onAddMemberClick={openAddMemberDialog}
         />
 
         <GroupMembersList
@@ -70,21 +81,38 @@ const GroupMembers: React.FC = () => {
           canManageMembers={canManageMembers}
           currentUserId={user?.id}
           isAdmin={userRole === 'admin'}
-          onAddMember={handleAddMemberClick}
-          onEditMember={handleEditMember}
-          onDeleteMember={handleDeleteMember}
+          onAddMember={openAddMemberDialog}
+          onEditMember={openEditMemberDialog}
+          onDeleteMember={openDeleteMemberDialog}
         />
         
+        {/* Dialogs */}
         {groupId && (
-          <AddGroupMemberDialog
-            open={showAddMemberDialog}
-            onOpenChange={setShowAddMemberDialog}
-            groupId={groupId}
-            onSuccess={handleAddMemberSuccess}
-          />
+          <>
+            <AddGroupMemberDialog
+              open={showAddMemberDialog}
+              onOpenChange={setShowAddMemberDialog}
+              groupId={groupId}
+              onSuccess={handleAddMemberSuccess}
+            />
+            
+            <EditGroupMemberDialog
+              open={!!editMember}
+              onOpenChange={closeEditMemberDialog}
+              groupId={groupId}
+              member={editMember}
+              onSuccess={handleEditMemberSuccess}
+            />
+            
+            <DeleteGroupMemberDialog
+              open={!!deleteMember}
+              onOpenChange={closeDeleteMemberDialog}
+              groupId={groupId}
+              member={deleteMember}
+              onSuccess={handleDeleteMemberSuccess}
+            />
+          </>
         )}
-        
-        {/* Placeholder for edit/delete member dialogs that would be implemented later */}
       </div>
     </Layout>
   );

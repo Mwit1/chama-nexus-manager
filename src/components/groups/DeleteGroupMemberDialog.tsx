@@ -12,17 +12,13 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from '@/integrations/supabase/client';
-
-interface Member {
-  id: string;
-  full_name: string | null;
-}
+import { Member } from '@/types/group';
 
 interface DeleteGroupMemberDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   groupId: string;
-  member: Member;
+  member: Member | null;
   onSuccess: () => void;
 }
 
@@ -37,10 +33,11 @@ const DeleteGroupMemberDialog: React.FC<DeleteGroupMemberDialogProps> = ({
   const [isDeleting, setIsDeleting] = useState(false);
 
   const handleDelete = async () => {
+    if (!member) return;
+    
     try {
       setIsDeleting(true);
       
-      // Use member.id which is the group_members.id field, not user_id
       const { error } = await supabase
         .from('group_members')
         .delete()
@@ -49,7 +46,13 @@ const DeleteGroupMemberDialog: React.FC<DeleteGroupMemberDialogProps> = ({
 
       if (error) throw error;
 
+      toast({
+        title: "Member removed",
+        description: `${member.full_name} has been removed from the group.`
+      });
+      
       onSuccess();
+      onOpenChange(false);
     } catch (error: any) {
       console.error('Error removing member:', error);
       toast({
@@ -68,7 +71,7 @@ const DeleteGroupMemberDialog: React.FC<DeleteGroupMemberDialogProps> = ({
         <AlertDialogHeader>
           <AlertDialogTitle>Remove Member</AlertDialogTitle>
           <AlertDialogDescription>
-            Are you sure you want to remove {member.full_name || 'this member'} from the group? This action cannot be undone.
+            Are you sure you want to remove {member?.full_name || 'this member'} from the group? This action cannot be undone.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

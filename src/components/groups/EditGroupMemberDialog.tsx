@@ -1,8 +1,5 @@
 
-import React from 'react';
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import * as z from "zod";
+import React, { useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -11,42 +8,21 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import { Form } from "@/components/ui/form";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from '@/integrations/supabase/client';
-
-const formSchema = z.object({
-  role: z.enum(['admin', 'treasurer', 'member'], {
-    required_error: "Please select a role.",
-  }),
-});
-
-interface Member {
-  id: string;
-  full_name: string | null;
-  role: string;
-}
+import UserRoleField from './UserRoleField';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { addMemberFormSchema, AddMemberFormValues } from './AddMemberFormSchema';
+import { Member } from '@/types/group';
 
 interface EditGroupMemberDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   groupId: string;
-  member: Member;
+  member: Member | null;
   onSuccess: () => void;
 }
 
@@ -58,14 +34,25 @@ const EditGroupMemberDialog: React.FC<EditGroupMemberDialogProps> = ({
   onSuccess,
 }) => {
   const { toast } = useToast();
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+
+  const form = useForm<AddMemberFormValues>({
+    resolver: zodResolver(addMemberFormSchema),
     defaultValues: {
-      role: member.role as 'admin' | 'treasurer' | 'member',
+      email: "",
+      role: "member",
     },
   });
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+  // Set the form values when the member changes
+  useEffect(() => {
+    if (member) {
+      form.setValue('role', member.role as 'admin' | 'treasurer' | 'member');
+    }
+  }, [member, form]);
+
+  const onSubmit = async (values: AddMemberFormValues) => {
+    if (!member) return;
+
     try {
       const { error } = await supabase
         .from('group_members')
@@ -75,7 +62,13 @@ const EditGroupMemberDialog: React.FC<EditGroupMemberDialogProps> = ({
 
       if (error) throw error;
 
+      toast({
+        title: "Member updated",
+        description: `${member.full_name}'s role has been updated to ${values.role}.`,
+      });
+      
       onSuccess();
+      onOpenChange(false);
     } catch (error: any) {
       console.error('Error updating member role:', error);
       toast({
@@ -92,36 +85,13 @@ const EditGroupMemberDialog: React.FC<EditGroupMemberDialogProps> = ({
         <DialogHeader>
           <DialogTitle>Edit Member Role</DialogTitle>
           <DialogDescription>
-            Change the role for {member.full_name || 'this member'}.
+            Change the role for {member?.full_name || 'this member'}.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-2">
-            <FormField
-              control={form.control}
-              name="role"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Role</FormLabel>
-                  <Select 
-                    onValueChange={field.onChange} 
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a role" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="admin">Admin</SelectItem>
-                      <SelectItem value="treasurer">Treasurer</SelectItem>
-                      <SelectItem value="member">Member</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <UserRoleField form={form} />
+
             <DialogFooter className="pt-4">
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Cancel
