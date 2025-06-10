@@ -67,38 +67,42 @@ const GroupMembers: React.FC = () => {
   
   return (
     <Layout>
-      <div className="bg-white shadow-md rounded-lg p-8">
-        <GroupMembersHeader 
-          group={group}
-          canManageMembers={canManageMembers}
-          onBackClick={handleBackClick}
-          onAddMemberClick={openAddMemberDialog}
-        />
+      <div className="space-y-6">
+        <div className="bg-white shadow-sm rounded-lg border p-6">
+          <GroupMembersHeader 
+            group={group}
+            canManageMembers={canManageMembers}
+            onBackClick={handleBackClick}
+            onAddMemberClick={openAddMemberDialog}
+          />
+        </div>
 
-        <GroupMembersList
-          members={members}
-          loading={loading}
-          canManageMembers={canManageMembers}
-          currentUserId={user?.id}
-          isAdmin={userRole === 'admin'}
-          onAddMember={openAddMemberDialog}
-          onEditMember={openEditMemberDialog}
-          onDeleteMember={openDeleteMemberDialog}
-        />
+        <div className="bg-white shadow-sm rounded-lg border p-6">
+          <GroupMembersList
+            members={members}
+            loading={loading}
+            canManageMembers={canManageMembers}
+            currentUserId={user?.id}
+            isAdmin={userRole === 'admin'}
+            onAddMember={openAddMemberDialog}
+            onEditMember={openEditMemberDialog}
+            onDeleteMember={openDeleteMemberDialog}
+          />
+        </div>
         
         {/* Dialogs */}
         {groupId && (
           <>
             <AddGroupMemberDialog
               open={showAddMemberDialog}
-              onOpenChange={closeAddMemberDialog}
+              onOpenChange={(open) => open ? openAddMemberDialog() : closeAddMemberDialog()}
               groupId={groupId}
               onSuccess={handleAddMemberSuccess}
             />
             
             <EditGroupMemberDialog
               open={!!editMember}
-              onOpenChange={closeEditMemberDialog}
+              onOpenChange={(open) => open ? null : closeEditMemberDialog()}
               groupId={groupId}
               member={editMember}
               onSuccess={handleEditMemberSuccess}
@@ -106,7 +110,7 @@ const GroupMembers: React.FC = () => {
             
             <DeleteGroupMemberDialog
               open={!!deleteMember}
-              onOpenChange={closeDeleteMemberDialog}
+              onOpenChange={(open) => open ? null : closeDeleteMemberDialog()}
               groupId={groupId}
               member={deleteMember}
               onSuccess={handleDeleteMemberSuccess}
