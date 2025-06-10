@@ -91,7 +91,7 @@ const GroupMembers: React.FC = () => {
           <>
             <AddGroupMemberDialog
               open={showAddMemberDialog}
-              onOpenChange={setShowAddMemberDialog}
+              onOpenChange={closeAddMemberDialog}
               groupId={groupId}
               onSuccess={handleAddMemberSuccess}
             />
