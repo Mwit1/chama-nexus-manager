@@ -29,18 +29,18 @@ export function useAllMembers() {
     try {
       setLoading(true);
       
-      // Check if current user is an admin
-      const { data: isAdmin, error: roleError } = await supabase
-        .rpc('has_role', { 
-          user_id: userId, 
-          role: 'admin'
-        });
+      // Check if current user is an admin using the correct function signature
+      const { data: userRoles, error: roleError } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', userId);
         
       if (roleError) {
         console.error('Error checking user role:', roleError);
         throw roleError;
       }
       
+      const isAdmin = userRoles?.some(ur => ur.role === 'admin') || false;
       setUserRole(isAdmin ? 'admin' : 'member');
       
       // Fetch all group members with their profiles and group information
