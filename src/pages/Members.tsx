@@ -8,6 +8,8 @@ import MembersOverview from '@/components/members/MembersOverview';
 import MembersGrid from '@/components/members/MembersGrid';
 import MembersFilters from '@/components/members/MembersFilters';
 import { useAllMembers } from '@/hooks/useAllMembers';
+import { useCreateUserCredentials } from '@/hooks/useCreateUserCredentials';
+import CreateUserCredentialsDialog from '@/components/members/CreateUserCredentialsDialog';
 
 const Members: React.FC = () => {
   const { user } = useAuth();
@@ -20,6 +22,14 @@ const Members: React.FC = () => {
     handleMemberUpdated,
     handleMemberDeleted
   } = useAllMembers();
+  
+  const {
+    selectedMember,
+    showCreateCredentialsDialog,
+    openCreateCredentialsDialog,
+    closeCreateCredentialsDialog,
+    handleCreateCredentialsSuccess
+  } = useCreateUserCredentials();
   
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -100,8 +110,16 @@ const Members: React.FC = () => {
             loading={loading}
             isAdmin={isAdmin}
             onAddMember={() => {}}
+            onCreateCredentials={isAdmin ? openCreateCredentialsDialog : undefined}
           />
         </div>
+
+        <CreateUserCredentialsDialog 
+          open={showCreateCredentialsDialog}
+          onOpenChange={setShowCreateCredentialsDialog}
+          member={selectedMember}
+          onSuccess={handleCreateCredentialsSuccess}
+        />
       </div>
     </Layout>
   );

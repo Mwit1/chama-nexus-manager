@@ -1,45 +1,74 @@
 
 import React from 'react';
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { UserPlus, UserCog, UserX, KeyRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Phone, Calendar, MapPin, UserPlus } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { AllMember } from '@/hooks/useAllMembers';
+import { MemberForCredentials } from '@/hooks/useCreateUserCredentials';
 
 interface MembersGridProps {
   members: AllMember[];
   loading: boolean;
   isAdmin: boolean;
   onAddMember: () => void;
+  onEditMember?: (member: AllMember) => void;
+  onDeleteMember?: (member: AllMember) => void;
+  onCreateCredentials?: (member: MemberForCredentials) => void;
 }
 
 const MembersGrid: React.FC<MembersGridProps> = ({
   members,
   loading,
   isAdmin,
-  onAddMember
+  onAddMember,
+  onEditMember,
+  onDeleteMember,
+  onCreateCredentials
 }) => {
+  const getInitials = (name: string | null) => {
+    if (!name) return "UN";
+    return name
+      .split(' ')
+      .map(part => part.charAt(0))
+      .join('')
+      .toUpperCase()
+      .substring(0, 2);
+  };
+
+  const getAvatarColor = (name: string | null) => {
+    if (!name) return "bg-gray-400";
+    
+    const colors = [
+      "bg-red-500", "bg-blue-500", "bg-green-500", "bg-yellow-500",
+      "bg-purple-500", "bg-pink-500", "bg-indigo-500", "bg-teal-500"
+    ];
+    
+    let hash = 0;
+    for (let i = 0; i < (name?.length || 0); i++) {
+      hash = name.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    
+    return colors[Math.abs(hash) % colors.length];
+  };
+
   if (loading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {[1, 2, 3, 4, 5, 6].map((i) => (
-          <Card key={i} className="animate-pulse">
-            <CardHeader>
-              <div className="flex items-center space-x-4">
-                <div className="h-12 w-12 bg-gray-200 rounded-full"></div>
-                <div className="space-y-2">
-                  <div className="h-4 bg-gray-200 rounded w-24"></div>
-                  <div className="h-3 bg-gray-200 rounded w-16"></div>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                <div className="h-3 bg-gray-200 rounded w-full"></div>
-                <div className="h-3 bg-gray-200 rounded w-2/3"></div>
-              </div>
+        {[...Array(6)].map((_, i) => (
+          <Card key={i} className="w-full overflow-hidden">
+            <CardContent className="pt-6 flex flex-col items-center">
+              <Skeleton className="h-20 w-20 rounded-full mb-4" />
+              <Skeleton className="h-6 w-2/3 mb-2" />
+              <Skeleton className="h-4 w-1/2 mb-1" />
+              <Skeleton className="h-4 w-1/3 mt-2" />
             </CardContent>
+            <CardFooter className="flex justify-center gap-2 pb-4">
+              <Skeleton className="h-10 w-20" />
+              <Skeleton className="h-10 w-20" />
+            </CardFooter>
           </Card>
         ))}
       </div>
@@ -48,87 +77,67 @@ const MembersGrid: React.FC<MembersGridProps> = ({
 
   if (members.length === 0) {
     return (
-      <Card className="text-center py-12">
-        <CardContent>
-          <div className="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-            <UserPlus className="h-12 w-12 text-gray-400" />
-          </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No members found</h3>
-          <p className="text-gray-600 mb-4">
-            No members match your current filters.
-          </p>
-          {isAdmin && (
-            <Button onClick={onAddMember}>
-              Add First Member
-            </Button>
-          )}
-        </CardContent>
-      </Card>
+      <div className="text-center py-10">
+        <h3 className="text-lg font-semibold mb-2">No members found</h3>
+        <p className="text-gray-500 mb-4">There are no members matching your search criteria.</p>
+        <Button onClick={onAddMember} className="flex items-center gap-2">
+          <UserPlus className="h-4 w-4" />
+          Add Member
+        </Button>
+      </div>
     );
   }
-
-  const getInitials = (name: string | null) => {
-    if (!name) return 'U';
-    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
-  };
-
-  const getRoleBadgeColor = (role: string) => {
-    switch (role) {
-      case 'admin': return 'bg-purple-100 text-purple-800';
-      case 'treasurer': return 'bg-blue-100 text-blue-800';
-      default: return 'bg-green-100 text-green-800';
-    }
-  };
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {members.map((member) => (
-        <Card key={member.id} className="hover:shadow-md transition-shadow">
-          <CardHeader className="pb-4">
-            <div className="flex items-center space-x-4">
-              <Avatar className="h-12 w-12">
-                <AvatarFallback className="bg-gray-100 text-gray-600">
-                  {getInitials(member.full_name)}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex-1 min-w-0">
-                <h3 className="font-medium text-gray-900 truncate">
-                  {member.full_name || 'Unknown Member'}
-                </h3>
-                <Badge 
-                  variant="secondary" 
-                  className={`text-xs ${getRoleBadgeColor(member.role)}`}
-                >
-                  {member.role}
-                </Badge>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex items-center text-sm text-gray-600">
-              <Phone className="h-4 w-4 mr-2 flex-shrink-0" />
-              <span className="truncate">{member.phone_number || 'No phone'}</span>
-            </div>
+        <Card key={member.id} className="w-full overflow-hidden">
+          <CardContent className="pt-6 flex flex-col items-center">
+            <Avatar className={`h-20 w-20 ${getAvatarColor(member.full_name)} text-white text-xl`}>
+              <AvatarFallback>{getInitials(member.full_name)}</AvatarFallback>
+            </Avatar>
+            <h3 className="mt-4 font-semibold text-lg">{member.full_name || 'Unknown'}</h3>
+            <p className="text-gray-500 text-sm">{member.phone_number || 'No phone number'}</p>
             
-            <div className="flex items-center text-sm text-gray-600">
-              <MapPin className="h-4 w-4 mr-2 flex-shrink-0" />
-              <span className="truncate">{member.group_name}</span>
-            </div>
-            
-            <div className="flex items-center text-sm text-gray-600">
-              <Calendar className="h-4 w-4 mr-2 flex-shrink-0" />
-              <span>Joined {new Date(member.joined_at).toLocaleDateString()}</span>
-            </div>
-            
-            {member.status && (
-              <Badge 
-                variant={member.status === 'Active' ? 'default' : 'secondary'}
-                className="text-xs"
-              >
-                {member.status}
+            <div className="flex items-center gap-2 mt-2">
+              <Badge variant={member.role === 'admin' ? 'destructive' : member.role === 'treasurer' ? 'default' : 'outline'}>
+                {member.role === 'admin' ? 'Admin' : member.role === 'treasurer' ? 'Treasurer' : 'Member'}
               </Badge>
-            )}
+              <Badge variant="outline">{member.group_name}</Badge>
+            </div>
           </CardContent>
+          
+          <CardFooter className="flex flex-wrap justify-center gap-2 pb-4">
+            {isAdmin && onEditMember && (
+              <Button variant="outline" size="sm" onClick={() => onEditMember(member)} className="flex items-center gap-1">
+                <UserCog className="h-4 w-4" />
+                Edit
+              </Button>
+            )}
+            
+            {isAdmin && onDeleteMember && (
+              <Button variant="outline" size="sm" onClick={() => onDeleteMember(member)} className="flex items-center gap-1 text-red-500 hover:text-red-600">
+                <UserX className="h-4 w-4" />
+                Delete
+              </Button>
+            )}
+            
+            {isAdmin && onCreateCredentials && (
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => onCreateCredentials({
+                  id: member.user_id,
+                  full_name: member.full_name,
+                  phone_number: member.phone_number
+                })}
+                className="flex items-center gap-1 text-blue-500 hover:text-blue-600"
+              >
+                <KeyRound className="h-4 w-4" />
+                Create Login
+              </Button>
+            )}
+          </CardFooter>
         </Card>
       ))}
     </div>
