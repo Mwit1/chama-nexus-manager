@@ -31,10 +31,10 @@ const MembersFilters: React.FC<MembersFiltersProps> = ({
   // Get unique groups for filter
   const uniqueGroups = Array.from(
     new Set(members.map(member => member.group_name))
-  ).filter(Boolean);
+  ).filter(Boolean).sort();
 
   return (
-    <div className="space-y-4 mb-6">
+    <div className="space-y-4">
       <div className="relative">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
         <Input
@@ -45,7 +45,7 @@ const MembersFilters: React.FC<MembersFiltersProps> = ({
         />
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Select value={statusFilter} onValueChange={setStatusFilter}>
           <SelectTrigger>
             <SelectValue placeholder="Filter by status" />
