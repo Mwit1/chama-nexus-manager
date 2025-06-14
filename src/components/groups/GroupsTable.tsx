@@ -15,11 +15,10 @@ import {
   Users, 
   Calendar, 
   UserPlus, 
-  Settings,
-  Trash2 
+  Settings 
 } from "lucide-react";
 import { Group } from '@/hooks/useGroups';
-import AddGroupMemberDialog from './AddGroupMemberDialog';
+import AddMemberByNameDialog from './AddMemberByNameDialog';
 import { useToast } from '@/components/ui/use-toast';
 
 interface GroupsTableProps {
@@ -144,7 +143,7 @@ const GroupsTable: React.FC<GroupsTableProps> = ({ groups, loading, onRefresh })
       </Table>
 
       {selectedGroupId && (
-        <AddGroupMemberDialog
+        <AddMemberByNameDialog
           open={showAddMemberDialog}
           onOpenChange={setShowAddMemberDialog}
           groupId={selectedGroupId}
