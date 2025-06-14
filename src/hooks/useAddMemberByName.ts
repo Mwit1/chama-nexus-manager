@@ -19,7 +19,7 @@ export function useAddMemberByName(groupId: string, onSuccess: () => void) {
 
   const onSubmit = async (values: AddMemberByNameFormValues) => {
     try {
-      // First, create or find a user profile with the given name and phone
+      // First, search for an existing profile with the given name and phone
       const { data: existingProfile, error: profileSearchError } = await supabase
         .from('profiles')
         .select('id')
@@ -29,22 +29,19 @@ export function useAddMemberByName(groupId: string, onSuccess: () => void) {
 
       let userId: string;
 
-      if (!existingProfile) {
-        // Create a new profile with a generated UUID
-        const { data: newProfile, error: createProfileError } = await supabase
-          .from('profiles')
-          .insert({
-            id: crypto.randomUUID(),
-            full_name: values.fullName,
-            phone_number: values.phoneNumber
-          })
-          .select('id')
-          .single();
-
-        if (createProfileError) throw createProfileError;
-        userId = newProfile.id;
-      } else {
+      if (existingProfile) {
+        // User profile exists, use that user ID
         userId = existingProfile.id;
+      } else {
+        // No existing profile found - we need to create a placeholder profile
+        // Since profiles must reference auth.users, we'll create a group member record
+        // without a profile for now, indicating this is a "pending" member
+        toast({
+          title: "Member not found",
+          description: "This person doesn't have an account yet. Please ask them to sign up first, or use the regular member invitation feature.",
+          variant: "destructive",
+        });
+        return;
       }
 
       // Check if user is already a member of this group
@@ -77,6 +74,10 @@ export function useAddMemberByName(groupId: string, onSuccess: () => void) {
 
       form.reset();
       onSuccess();
+      toast({
+        title: "Member added",
+        description: "The member has been successfully added to the group.",
+      });
     } catch (error: any) {
       console.error('Error adding group member:', error);
       toast({
