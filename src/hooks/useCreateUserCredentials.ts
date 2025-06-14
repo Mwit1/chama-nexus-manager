@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 export type MemberForCredentials = {
   id: string;
@@ -34,6 +34,7 @@ export function useCreateUserCredentials() {
   return {
     selectedMember,
     showCreateCredentialsDialog,
+    setShowCreateCredentialsDialog,
     openCreateCredentialsDialog,
     closeCreateCredentialsDialog,
     handleCreateCredentialsSuccess
